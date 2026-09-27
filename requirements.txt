@@ -1,0 +1,19 @@
+# NAVHRIDYA prototype — SIH26093, Team HackSmiths
+#
+# The CORE set is everything the prototype needs to run. No build step, no npm,
+# no GPU. The OPTIONAL set turns on the full stack named in the PPT; the app
+# detects each one at startup and nothing else changes.
+
+# ---- core (required) ----
+starlette>=0.37          # web framework — this is FastAPI's own core
+uvicorn>=0.23            # the HTTP server
+python-multipart>=0.0.6  # parses the uploaded audio file
+PyJWT>=2.8               # signed session tokens
+
+# ---- optional: the full stated stack ----
+# websockets>=12.0       # only for Deepgram live streaming; the clip-based
+#                        # live call path works without it
+# fastapi>=0.110         # adds interactive API docs at /docs; app auto-detects it
+# (no vendor SDK needed - the app speaks the REST API directly)
+# faster-whisper>=1.0    # offline transcription instead of the OpenAI API
+# pytest>=8.0            # to run the test suite

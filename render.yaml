@@ -1,0 +1,41 @@
+# One-click deploy config for Render (render.com).
+#
+# The free tier is enough: no GPU, no model download, no build step for the
+# frontend. Point Render at the repo with New -> Blueprint and it reads this.
+#
+# One thing to know about the free tier: its disk is ephemeral. The SQLite file
+# is recreated empty on every deploy and on every wake from sleep, so cases do
+# not survive a restart. For a demo that is fine - every visitor gets an empty
+# workspace anyway - but do not treat a hosted case list as a record.
+services:
+  - type: web
+    name: navhridya
+    runtime: python
+    plan: free
+    region: singapore
+    buildCommand: pip install -r requirements-deploy.txt
+    startCommand: uvicorn backend.app:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+
+      # Signs the session tokens. Render generates one and keeps it secret.
+      - key: NAVHRIDYA_SECRET
+        generateValue: true
+
+      # ---- AI ----------------------------------------------------------
+      # Set these in the Render dashboard, not here - they are secrets.
+      # sync: false means "ask me for this value, do not store it in the repo".
+      - key: AI_PROVIDER
+        value: groq
+      - key: GROQ_API_KEY
+        sync: false
+      - key: NLP_MODEL
+        sync: false
+      - key: ASR_MODEL
+        sync: false
+
+      # Change the seeded demo account's password before going public.
+      - key: SEED_ADMIN_PASSWORD
+        sync: false

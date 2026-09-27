@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sign in - NAVHRIDYA</title>
+<link rel="icon" href="/assets/logo.png" />
+<link rel="stylesheet" href="/assets/base.css" />
+<script>
+  try { document.documentElement.setAttribute('data-theme',
+        localStorage.getItem('nav_theme') === 'dark' ? 'dark' : 'light'); } catch (e) {}
+</script>
+<style>
+  body{min-height:100vh;display:flex;flex-direction:column}
+  .shell{flex:1;display:grid;grid-template-columns:1fr;align-items:stretch}
+  @media(min-width:980px){.shell{grid-template-columns:1fr 1fr}}
+  .pitch{display:none;padding:52px 44px;background:var(--brand-ink);color:#e9edf1;
+         flex-direction:column;justify-content:center}
+  @media(min-width:980px){.pitch{display:flex}}
+  .pitch a.logo{display:flex;gap:11px;align-items:center;text-decoration:none;color:#fff;
+                font-weight:750;font-size:19px;letter-spacing:-.4px}
+  .pitch a.logo img{width:34px;height:34px;object-fit:contain}
+  .pitch h2{font-size:31px;margin:34px 0 0;letter-spacing:-.9px;max-width:18em;line-height:1.22}
+  .pitch p{color:rgba(233,237,241,.72);margin:15px 0 0;max-width:30em;font-size:14.5px}
+  .pitch ul{list-style:none;margin:30px 0 0;padding:0}
+  .pitch li{display:flex;gap:11px;padding:8px 0;font-size:14px;align-items:flex-start;
+            color:rgba(233,237,241,.86)}
+  .pitch li svg{color:#7fc4a0;flex:0 0 auto;margin-top:3px}
+  .pitch .back{margin-top:36px;font-size:13px;color:rgba(233,237,241,.6);text-decoration:none}
+  .pitch .back:hover{color:#7fc4a0}
+
+  .formside{display:flex;flex-direction:column;padding:26px 20px 34px;background:var(--page)}
+  .formside .top{display:flex;align-items:center;gap:12px}
+  .formside .top a.mlogo{display:flex;gap:9px;align-items:center;text-decoration:none;
+    font-weight:750;letter-spacing:-.3px}
+  .formside .top a.mlogo img{width:28px;height:28px;object-fit:contain}
+  @media(min-width:980px){.formside .top a.mlogo{display:none}}
+  .formside .top .sp{margin-left:auto}
+  .box{margin:auto;width:100%;max-width:426px;padding:24px 0}
+  .box h1{font-size:26px;letter-spacing:-.7px}
+  .box .sub{color:var(--muted);margin:8px 0 0;font-size:14px}
+  .seg{display:flex;border:1px solid var(--line-strong);border-radius:11px;padding:3px;
+       margin-top:22px;background:var(--surface)}
+  .seg button{flex:1;border:0;background:none;padding:9px;border-radius:8px;font:inherit;
+              font-weight:650;font-size:14px;color:var(--muted);cursor:pointer}
+  .seg button.on{background:var(--brand-ink);color:#fff}
+  html[data-theme="dark"] .seg button.on{background:var(--accent);color:#08130d}
+  form{margin-top:4px}
+  .demo{margin-top:20px;background:var(--accent-soft);border-radius:11px;padding:12px 14px;
+        font-size:12.5px;color:var(--text-2)}
+  .demo b{color:var(--text)}
+  .demo code{background:var(--surface);border:1px solid var(--line);border-radius:6px;
+             padding:1px 6px;font-size:12px}
+  .swap{margin-top:18px;text-align:center;font-size:13.5px;color:var(--muted)}
+  .swap button{border:0;background:none;color:var(--accent);font:inherit;font-weight:700;
+               cursor:pointer;text-decoration:underline;padding:0}
+  .tiny{margin-top:22px;font-size:11.5px;color:var(--faint);text-align:center;line-height:1.7}
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <aside class="pitch">
+    <a class="logo" href="/home"><img src="/assets/logo.png" alt="" /> NAVHRIDYA</a>
+    <h2>The call that needs help first should be answered first.</h2>
+    <p>A stress and trauma assessment layer proposed for the National Helpline Against
+       Atrocities, 14566. Upload a recorded call and get a Stress Vulnerability Index with the
+       reasoning behind it.</p>
+    <ul id="pitchList"></ul>
+    <a class="back" href="/home">&larr; Back to the NAVHRIDYA homepage</a>
+  </aside>
+
+  <main class="formside">
+    <div class="top">
+      <a class="mlogo" href="/home"><img src="/assets/logo.png" alt="" /> NAVHRIDYA</a>
+      <div class="sp"></div>
+      <div id="tsw"></div>
+    </div>
+
+    <div class="box">
+      <h1 id="title">Counsellor sign in</h1>
+      <p class="sub" id="sub">Sign in to triage calls on the NHAA 14566 assessment layer.</p>
+
+      <div class="seg">
+        <button type="button" id="tabIn" class="on">Sign in</button>
+        <button type="button" id="tabUp">Create account</button>
+      </div>
+
+      <form id="form" autocomplete="on">
+        <div id="upOnly" style="display:none">
+          <label class="fld">Full name
+            <input id="fullName" type="text" placeholder="Riya Verma" autocomplete="name" />
+          </label>
+          <label class="fld">Work email <span style="font-weight:400;color:var(--muted)">(optional)</span>
+            <input id="email" type="email" placeholder="you@nhaa.gov.in" autocomplete="email" />
+          </label>
+        </div>
+
+        <label class="fld">Username
+          <input id="username" type="text" placeholder="counsellor.name" autocomplete="username"
+                 required />
+        </label>
+
+        <label class="fld">Password
+          <span class="pw">
+            <input id="password" type="password" placeholder="Your password"
+                   autocomplete="current-password" required />
+            <button type="button" id="peek" aria-label="Show password">Show</button>
+          </span>
+        </label>
+        <p class="hint" id="pwHint" style="display:none">At least 8 characters.</p>
+
+        <p class="err" id="err"></p>
+        <button class="btn btn-primary btn-block" id="go" type="submit">Sign in</button>
+      </form>
+
+      <div class="demo" id="demo">
+        <b>Demo account</b> - username <code>admin</code>, password <code>admin123</code>.
+        Change it from Settings once you are in.
+      </div>
+
+      <p class="swap" id="swap">
+        No account yet? <button type="button" id="swapBtn">Create one</button>
+      </p>
+
+      <p class="tiny">
+        Prototype for Smart India Hackathon 2026, PS SIH26093, Team HackSmiths.<br />
+        Not an official Government of India service. In an emergency call 112.
+      </p>
+    </div>
+  </main>
+</div>
+
+<script src="/assets/common.js"></script>
+<script>
+  mountThemeSwitch($('tsw'));
+
+  $('pitchList').innerHTML = [
+    ['shield', 'Safety rules run outside the model, so a calm voice cannot cancel a danger flag.'],
+    ['info', 'Every score arrives with the cues behind it and the arithmetic written out.'],
+    ['headset', 'The counsellor decides every case. NAVHRIDYA only orders the queue.'],
+  ].map(([i, t]) => `<li>${icon(i, 16)}<span>${t}</span></li>`).join('');
+
+  let mode = location.hash.replace('#', '') === 'signup' ? 'signup' : 'login';
+
+  function paint() {
+    const up = mode === 'signup';
+    $('tabIn').classList.toggle('on', !up);
+    $('tabUp').classList.toggle('on', up);
+    $('title').textContent = up ? 'Create a counsellor account' : 'Counsellor sign in';
+    $('sub').textContent = up
+      ? 'New accounts get the counsellor role. Cases you upload stay tied to your account.'
+      : 'Sign in to triage calls on the NHAA 14566 assessment layer.';
+    $('upOnly').style.display = up ? '' : 'none';
+    $('pwHint').style.display = up ? '' : 'none';
+    $('go').textContent = up ? 'Create account' : 'Sign in';
+    $('demo').style.display = up ? 'none' : '';
+    $('password').setAttribute('autocomplete', up ? 'new-password' : 'current-password');
+    $('swap').innerHTML = up
+      ? 'Already have an account? <button type="button" id="swapBtn">Sign in</button>'
+      : 'No account yet? <button type="button" id="swapBtn">Create one</button>';
+    $('swapBtn').onclick = () => { mode = up ? 'login' : 'signup'; sync(); };
+    $('err').textContent = '';
+    history.replaceState(null, '', up ? '#signup' : '#');
+    document.title = (up ? 'Create account' : 'Sign in') + ' - NAVHRIDYA';
+  }
+  function sync() { paint(); $(mode === 'signup' ? 'fullName' : 'username').focus(); }
+
+  $('tabIn').onclick = () => { mode = 'login'; sync(); };
+  $('tabUp').onclick = () => { mode = 'signup'; sync(); };
+
+  /* show / hide password */
+  $('peek').onclick = () => {
+    const f = $('password');
+    const showing = f.type === 'text';
+    f.type = showing ? 'password' : 'text';
+    $('peek').textContent = showing ? 'Show' : 'Hide';
+    $('peek').setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+    f.focus();
+  };
+
+  $('form').onsubmit = async (e) => {
+    e.preventDefault();
+    $('err').textContent = '';
+    const body = { username: $('username').value.trim(), password: $('password').value };
+    if (mode === 'signup') {
+      body.full_name = $('fullName').value.trim();
+      body.email = $('email').value.trim();
+    }
+    $('go').disabled = true;
+    $('go').textContent = mode === 'signup' ? 'Creating account...' : 'Signing in...';
+    try {
+      const res = await fetch('/api/auth/' + (mode === 'signup' ? 'register' : 'login'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.detail || 'Could not complete that request.');
+      localStorage.setItem('nav_token', data.token);
+      localStorage.setItem('nav_user', JSON.stringify(data.user || {}));
+      if (data.user && data.user.theme) applyTheme(data.user.theme);
+      location.href = '/app#/dashboard';
+    } catch (ex) {
+      $('err').textContent = ex.message;
+      $('go').disabled = false;
+      paint();
+    }
+  };
+
+  paint();
+  $('username').focus();
+</script>
+</body>
+</html>

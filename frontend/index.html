@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>NAVHRIDYA - Stress and Trauma Assessment for NHAA 14566</title>
+<meta name="description" content="NAVHRIDYA is an AI-assisted stress and trauma assessment layer proposed for the National Helpline Against Atrocities (14566), so the most vulnerable caller is reached first." />
+<link rel="icon" href="/assets/logo.png" />
+<link rel="stylesheet" href="/assets/base.css" />
+<script>
+  /* set the theme before first paint so there is no flash of the wrong palette */
+  try { document.documentElement.setAttribute('data-theme',
+        localStorage.getItem('nav_theme') === 'dark' ? 'dark' : 'light'); } catch (e) {}
+</script>
+<style>
+  .topbar{position:sticky;top:0;z-index:30;background:var(--surface);
+          border-bottom:1px solid var(--line)}
+  .topbar .wrap{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;
+                padding-top:10px;padding-bottom:10px;min-height:62px}
+  .logo{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:750;
+        font-size:17px;letter-spacing:-.3px}
+  .logo img{width:30px;height:30px;object-fit:contain}
+  .logo small{display:block;font-size:10.5px;font-weight:500;color:var(--muted);letter-spacing:.3px}
+  .navlinks{display:none;gap:4px;margin-left:12px}
+  @media(min-width:900px){.navlinks{display:flex}}
+  .navlinks a{padding:8px 12px;border-radius:8px;text-decoration:none;color:var(--muted);
+              font-size:14px;font-weight:550}
+  .navlinks a:hover{background:var(--surface-2);color:var(--text)}
+  .topbar .right{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+                 justify-content:flex-end}
+  @media(max-width:430px){
+    .logo small{display:none}
+    .topbar .right{width:100%;justify-content:space-between}
+  }
+
+  .hero{padding:58px 0 46px;position:relative;overflow:hidden}
+  .hero:before{content:"";position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(900px 380px at 12% -10%, var(--accent-soft), transparent 70%),
+               radial-gradient(760px 340px at 92% 0%, var(--crit-bg), transparent 72%);
+    opacity:.85}
+  .hero .wrap{position:relative}
+  .hero .cols{display:grid;gap:34px;grid-template-columns:1fr;align-items:center}
+  @media(min-width:960px){.hero .cols{grid-template-columns:1.1fr .9fr}}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;background:var(--surface);
+    border:1px solid var(--line-strong);border-radius:99px;padding:5px 13px;font-size:12.5px;
+    font-weight:650;color:var(--text-2)}
+  .eyebrow b{color:var(--crit)}
+  .hero h1{font-size:clamp(31px,5.2vw,50px);margin:18px 0 0;letter-spacing:-1.2px}
+  .hero h1 em{font-style:normal;color:var(--brand-maroon);}
+  html[data-theme="dark"] .hero h1 em{color:var(--crit)}
+  .lede{font-size:17px;color:var(--text-2);margin:16px 0 0;max-width:36em}
+  .cta{display:flex;flex-wrap:wrap;gap:11px;margin-top:26px}
+  .trust{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:26px;font-size:12.5px;color:var(--muted)}
+  .trust span{display:inline-flex;align-items:center;gap:6px}
+  .trust svg{color:var(--accent)}
+
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;
+         padding:20px;box-shadow:var(--shadow-lg)}
+  .panel h3{font-size:14px;color:var(--muted);font-weight:650;letter-spacing:.3px}
+  .flow{list-style:none;margin:14px 0 0;padding:0}
+  .flow li{display:flex;gap:12px;padding:9px 0;align-items:flex-start}
+  .flow .n{width:24px;height:24px;border-radius:99px;background:var(--brand-ink);color:#fff;
+    font-size:12px;font-weight:700;display:grid;place-items:center;flex:0 0 auto;margin-top:2px}
+  html[data-theme="dark"] .flow .n{background:var(--accent);color:#08130d}
+  .flow b{display:block;font-size:14px}
+  .flow span{font-size:12.5px;color:var(--muted)}
+  .scorebox{margin-top:16px;border-top:1px dashed var(--line-strong);padding-top:14px;
+    display:flex;align-items:center;gap:14px}
+  .scorebox .big{font-size:34px;font-weight:750;line-height:1;color:var(--crit)}
+  .scorebox small{display:block;font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.4px}
+
+  section.band{padding:56px 0}
+  section.band.alt{background:var(--surface);border-top:1px solid var(--line);
+                   border-bottom:1px solid var(--line)}
+  .shead{max-width:40em}
+  .shead .kicker{font-size:12px;font-weight:750;letter-spacing:1.3px;text-transform:uppercase;
+                 color:var(--accent)}
+  .shead h2{font-size:clamp(24px,3.4vw,34px);margin:9px 0 0;letter-spacing:-.7px}
+  .shead p{color:var(--text-2);margin:12px 0 0;font-size:15.5px}
+
+  .steps{display:grid;gap:14px;margin-top:30px;grid-template-columns:1fr}
+  @media(min-width:760px){.steps{grid-template-columns:repeat(2,1fr)}}
+  @media(min-width:1060px){.steps{grid-template-columns:repeat(4,1fr)}}
+  .step{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;
+        position:relative}
+  section.alt .step{background:var(--page)}
+  .step .ico{width:38px;height:38px;border-radius:10px;background:var(--accent-soft);
+    color:var(--accent);display:grid;place-items:center;margin-bottom:12px}
+  .step .ico svg{width:19px;height:19px}
+  .step .num{position:absolute;top:16px;right:18px;font-size:26px;font-weight:750;
+             color:var(--line-strong);line-height:1}
+  .step h3{font-size:16px}
+  .step p{margin:7px 0 0;font-size:13.5px;color:var(--text-2)}
+
+  .diffs{display:grid;gap:14px;margin-top:30px;grid-template-columns:1fr}
+  @media(min-width:720px){.diffs{grid-template-columns:repeat(2,1fr)}}
+  @media(min-width:1060px){.diffs{grid-template-columns:repeat(3,1fr)}}
+  .diff{border:1px solid var(--line);border-left:3px solid var(--brand-maroon);
+        border-radius:12px;padding:17px 18px;background:var(--surface)}
+  section.alt .diff{background:var(--page)}
+  .diff:nth-child(2n){border-left-color:var(--brand-green)}
+  .diff:nth-child(3n){border-left-color:var(--mod)}
+  .diff h3{font-size:15.5px;display:flex;align-items:center;gap:8px}
+  .diff h3 svg{color:var(--accent);flex:0 0 auto}
+  .diff p{margin:8px 0 0;font-size:13.5px;color:var(--text-2)}
+
+  .svi{display:grid;gap:22px;grid-template-columns:1fr;margin-top:28px;align-items:start}
+  @media(min-width:900px){.svi{grid-template-columns:1fr 1fr}}
+  .formula{background:var(--brand-ink);color:#e9edf1;border-radius:14px;padding:20px;
+           font-family:"SFMono-Regular",Consolas,monospace;font-size:12.5px;line-height:1.85;
+           white-space:pre;overflow-x:auto;margin:0}
+  .formula .c{color:#7fc4a0}
+  .formula .k{color:#e5a25a}
+  .bands{list-style:none;margin:16px 0 0;padding:0}
+  .bands li{display:flex;align-items:center;gap:11px;padding:7px 0;
+            border-bottom:1px solid var(--line);font-size:13.5px}
+  .bands li:last-child{border-bottom:0}
+  .bands .sw{width:12px;height:12px;border-radius:99px;flex:0 0 auto}
+  .bands .rg{margin-left:auto;color:var(--muted);font-size:12.5px;font-variant-numeric:tabular-nums}
+
+  .callout{background:var(--crit-bg);border:1px solid var(--crit);border-radius:14px;padding:20px;
+           margin-top:26px;display:flex;gap:14px;align-items:flex-start}
+  .callout svg{color:var(--crit);flex:0 0 auto;margin-top:3px}
+  .callout h3{font-size:16px;color:var(--crit)}
+  .callout p{margin:7px 0 0;font-size:13.5px;color:var(--text-2)}
+
+  .finalcta{text-align:center;padding:60px 0}
+  .finalcta h2{font-size:clamp(24px,3.6vw,34px);letter-spacing:-.7px}
+  .finalcta p{color:var(--text-2);margin:12px auto 0;max-width:34em}
+  .future{margin-top:30px;display:inline-flex;gap:9px;align-items:center;font-size:13px;
+          color:var(--muted);background:var(--surface-2);border-radius:99px;padding:8px 16px}
+</style>
+</head>
+<body>
+
+<div class="gov"><div class="wrap">
+  Ministry of Social Justice &amp; Empowerment <span>|</span>
+  National Helpline Against Atrocities - 14566 <span>|</span>
+  proposed assessment layer, prototype for SIH 2026
+</div></div>
+
+<header class="topbar"><div class="wrap">
+  <a class="logo" href="/home">
+    <img src="/assets/logo.png" alt="" />
+    <span>NAVHRIDYA<small>Victim stress assessment layer</small></span>
+  </a>
+  <nav class="navlinks">
+    <a href="#how">How it works</a>
+    <a href="#differentiators">Key differentiators</a>
+    <a href="#svi">SVI scoring</a>
+    <a href="#safety">Safety by design</a>
+  </nav>
+  <div class="right">
+    <div id="tsw"></div>
+    <a class="btn btn-primary btn-sm" href="/app">Open the console</a>
+  </div>
+</div></header>
+
+<!-- ------------------------------------------------------------------ hero -->
+<section class="hero"><div class="wrap"><div class="cols">
+  <div>
+    <span class="eyebrow">PS SIH26093 &middot; <b>Team HackSmiths</b> &middot; Smart India Hackathon 2026</span>
+    <h1>The call that needs help first should be <em>answered first</em>.</h1>
+    <p class="lede">
+      NHAA 14566 takes calls from victims of caste-based atrocity in the order they arrive.
+      NAVHRIDYA listens to the recording, scores the caller's stress and immediate danger,
+      and hands the counsellor a ranked queue with the reasons attached - so a terrified
+      caller who speaks quietly is not left behind a calmer one.
+    </p>
+    <div class="cta">
+      <a class="btn btn-primary" href="/app">Open the operator dashboard <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg></a>
+      <a class="btn btn-outline" href="#how">See how it works</a>
+    </div>
+    <p class="hint" style="margin-top:12px">No account needed - the console opens straight
+      into a private workspace of your own.</p>
+    <div class="trust">
+      <span><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10zM9 12l2 2 4-4"/></svg> Rules run outside the model</span>
+      <span><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 3a4 4 0 1 1 0 8 4 4 0 0 1 0-8"/></svg> Counsellor decides every case</span>
+      <span><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 11h14a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2zM8 11V7a4 4 0 0 1 8 0v4"/></svg> Consent-gated by design</span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>THE PIPELINE, END TO END</h3>
+    <ul class="flow">
+      <li><span class="n">1</span><div><b>Recorded call</b>
+        <span>Uploaded by the counsellor after consent</span></div></li>
+      <li><span class="n">2</span><div><b>Speech to text</b>
+        <span>Whisper transcribes Hindi, English and code-mixed speech</span></div></li>
+      <li><span class="n">3</span><div><b>Safety rules</b>
+        <span>Deterministic patterns, checked before any model runs</span></div></li>
+      <li><span class="n">4</span><div><b>Distress and danger</b>
+        <span>Two axes scored 0-100, each with written reasons</span></div></li>
+      <li><span class="n">5</span><div><b>SVI and triage</b>
+        <span>Plain arithmetic, a band, and up to four actions</span></div></li>
+    </ul>
+    <div class="scorebox">
+      <div><div class="big">86</div><small>SVI / 100</small></div>
+      <div style="font-size:12.5px;color:var(--text-2)">
+        <b style="color:var(--crit)">Critical</b> - safety rule fired on an explicit threat to
+        life, so the score was raised to the floor of 80 regardless of the model's own output.
+      </div>
+    </div>
+  </div>
+</div></div></section>
+
+<!-- -------------------------------------------------------------- how it works -->
+<section class="band alt" id="how"><div class="wrap">
+  <div class="shead">
+    <p class="kicker">How it works</p>
+    <h2>Five steps between a recorded call and a ranked queue</h2>
+    <p>Nothing in this chain is a black box. Each stage writes down what it found, and the
+       final number is arithmetic a counsellor can check by hand.</p>
+  </div>
+  <div class="steps">
+    <div class="step"><span class="num">01</span>
+      <div class="ico"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg></div>
+      <h3>Upload with consent</h3>
+      <p>The counsellor confirms the caller was told what the recording is used for. Without
+         that tick, nothing is analysed and NHAA continues exactly as it does today.</p></div>
+    <div class="step"><span class="num">02</span>
+      <div class="ico"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3zM19 10v1a7 7 0 0 1-14 0v-1M12 19v3"/></svg></div>
+      <h3>Transcribe the call</h3>
+      <p>Speech to text handles Hindi, English and the code-mixed speech real callers use.
+         A typed transcript works too, for chat and portal intake.</p></div>
+    <div class="step"><span class="num">03</span>
+      <div class="ico"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10zM9 12l2 2 4-4"/></svg></div>
+      <h3>Run the safety rules</h3>
+      <p>Seven explicit rule families - threat to life, weapons, self-harm, imminent danger,
+         sexual violence, violence in progress, child at risk - are matched first, outside
+         the model.</p></div>
+    <div class="step"><span class="num">04</span>
+      <div class="ico"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></div>
+      <h3>Score, explain, triage</h3>
+      <p>Distress and danger are scored with written reasons, combined into the SVI, and
+         turned into a band plus up to four suggested actions for a human to approve.</p></div>
+  </div>
+</div></section>
+
+<!-- ---------------------------------------------------------- differentiators -->
+<section class="band" id="differentiators"><div class="wrap">
+  <div class="shead">
+    <p class="kicker">Key differentiators</p>
+    <h2>What makes this different from a sentiment score</h2>
+    <p>A helpline cannot act on a number it does not understand, and it cannot be put at
+       risk by a model that sounds confident. These six choices follow from that.</p>
+  </div>
+  <div class="diffs">
+    <div class="diff"><h3><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10zM9 12l2 2 4-4"/></svg> Safety rules outside the model</h3>
+      <p>Explicit-risk patterns are evaluated independently and applied afterwards, so a calm
+         voice or a polite phrasing cannot talk a danger flag down. The floor is deterministic
+         and reproducible.</p></div>
+    <div class="diff"><h3><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18M12 11v6M12 7.5h.01"/></svg> A score with its reasons attached</h3>
+      <p>Every case carries the cues that raised distress, the cues that raised danger, and a
+         line-by-line trail of the arithmetic. A counsellor reviews evidence, not a verdict.</p></div>
+    <div class="diff"><h3><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 2 7l10 5 10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg> Two axes, not one mood</h3>
+      <p>Distress and danger are scored separately. A grieving caller in no immediate danger and
+         a composed caller with a weapon at the door look nothing alike, and are triaged
+         differently.</p></div>
+    <div class="diff"><h3><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M7 21h10M5 7h14M5 7l-3 7h6zM19 7l3 7h-6z"/></svg> Built for the atrocity context</h3>
+      <p>The cue set covers social boycott, untouchability practices, denial of water and shops,
+         pressure to withdraw an FIR, and witness intimidation - the patterns the SC/ST Act
+         exists to address, not generic distress words.</p></div>
+    <div class="diff"><h3><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> A fixed action list</h3>
+      <p>The model may only choose from six pre-approved recommendations. It cannot invent an
+         instruction, promise a service the helpline does not run, or give clinical advice.</p></div>
+    <div class="diff"><h3><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14v-2a8 8 0 1 1 16 0v2M2.5 15.5h3v5h-3zM18.5 15.5h3v5h-3z"/></svg> The counsellor closes the case</h3>
+      <p>NAVHRIDYA orders the queue and never closes it. Status changes, escalation and every
+         decision that touches a victim stay with a trained human being.</p></div>
+  </div>
+</div></section>
+
+<!-- ------------------------------------------------------------------- svi -->
+<section class="band alt" id="svi"><div class="wrap">
+  <div class="shead">
+    <p class="kicker">SVI scoring</p>
+    <h2>The Stress Vulnerability Index is arithmetic, not a guess</h2>
+    <p>The model supplies the two component scores and the indicator flags. Turning those into
+       a number happens in plain Python, which is why the same case always scores the same.</p>
+  </div>
+  <div class="svi">
+    <pre class="formula"><span class="c"># distress and danger weigh equally</span>
+base_score      = <span class="k">0.5</span> * distress + <span class="k">0.5</span> * danger
+
+<span class="c"># up to four flags, five points each</span>
+indicator_bonus = min(<span class="k">20</span>, <span class="k">5</span> * flags_true)
+
+svi_score       = min(<span class="k">100</span>, base_score + indicator_bonus)
+
+<span class="c"># a rule fired outside the model: force the floor</span>
+<span class="k">if</span> safety_rule_fired:
+    svi_score   = max(svi_score, <span class="k">80</span>)</pre>
+    <div>
+      <h3 style="font-size:16px">Bands</h3>
+      <ul class="bands">
+        <li><span class="sw" style="background:var(--low)"></span> Low - information and support
+          <span class="rg">0 - 39</span></li>
+        <li><span class="sw" style="background:var(--mod)"></span> Moderate - counselling offered
+          <span class="rg">40 - 59</span></li>
+        <li><span class="sw" style="background:var(--high)"></span> High - priority in the queue
+          <span class="rg">60 - 79</span></li>
+        <li><span class="sw" style="background:var(--crit)"></span> Critical - escalate now
+          <span class="rg">80 - 100</span></li>
+      </ul>
+      <p class="hint" style="margin-top:14px">The weights and the 40/60/80 thresholds are
+        proposed design choices for this prototype. They are not clinically validated, and they
+        are written to be tuned by the helpline rather than hidden inside a model.</p>
+    </div>
+  </div>
+</div></section>
+
+<!-- ---------------------------------------------------------------- safety -->
+<section class="band" id="safety"><div class="wrap">
+  <div class="shead">
+    <p class="kicker">Safety by design</p>
+    <h2>What this system deliberately does not do</h2>
+    <p>The people calling 14566 are already carrying enough. A triage layer that guesses wrong
+       in the wrong direction costs more than one that admits its limits.</p>
+  </div>
+  <div class="steps" style="grid-template-columns:1fr;gap:10px;margin-top:26px">
+    <div class="step" style="display:flex;gap:13px;align-items:flex-start">
+      <div class="ico" style="margin:0"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18M12 11v6M12 7.5h.01"/></svg></div>
+      <div><h3>It does not diagnose</h3>
+        <p>No condition, no clinical label, no therapy. The output is a triage signal for a
+           trained counsellor, and the interface says so on every case.</p></div></div>
+    <div class="step" style="display:flex;gap:13px;align-items:flex-start">
+      <div class="ico" style="margin:0"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 3a4 4 0 1 1 0 8 4 4 0 0 1 0-8"/></svg></div>
+      <div><h3>It does not act on its own</h3>
+        <p>No case is closed, escalated or dismissed automatically. The queue order changes;
+           the decisions do not move.</p></div></div>
+    <div class="step" style="display:flex;gap:13px;align-items:flex-start">
+      <div class="ico" style="margin:0"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 11h14a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2zM8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
+      <div><h3>It does not analyse without consent</h3>
+        <p>Upload is gated on an explicit confirmation that the caller was told what the
+           recording is used for. Recordings stay on the helpline's own machine.</p></div></div>
+  </div>
+  <div class="callout"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg>
+    <div><h3>This prototype is not an emergency service</h3>
+      <p>NAVHRIDYA is a Smart India Hackathon 2026 prototype for PS SIH26093, built by Team
+         HackSmiths. It is not an official Government of India service. If someone is in
+         immediate danger, call 112. For atrocity-related help, call NHAA on 14566.</p></div>
+  </div>
+</div></section>
+
+<!-- -------------------------------------------------------------- final cta -->
+<section class="finalcta"><div class="wrap">
+  <h2>Ready to score a call?</h2>
+  <p>Sign in as a counsellor, upload a recording or paste a transcript, and watch the pipeline
+     produce an SVI with its full reasoning.</p>
+  <div class="cta" style="justify-content:center">
+    <a class="btn btn-primary" href="/app">Open the console <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg></a>
+    <a class="btn btn-outline" href="/login">Counsellor sign in</a>
+  </div>
+  <div class="future"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg> Now live: a call can be scored while it is still in progress</div>
+</div></section>
+
+<div id="footer"></div>
+
+<script src="/assets/common.js"></script>
+<script>
+  mountThemeSwitch(document.getElementById('tsw'));
+  mountFooter();
+</script>
+</body>
+</html>

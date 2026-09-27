@@ -1,0 +1,278 @@
+/* NAVHRIDYA design tokens and shared components.
+   One stylesheet for the public site, the auth page and the operator app.
+   Light is the default; [data-theme="dark"] on <html> swaps the palette, so
+   every component below is written against the variables, never raw colours. */
+
+:root{
+  /* brand: taken from the NAVHRIDYA mark - ink, maroon, forest green */
+  --brand-ink:#0d1722;
+  --brand-maroon:#6f171c;
+  --brand-green:#0d3428;
+
+  /* Light surfaces step warm off-white -> white, so a card lifts off the page
+     without needing a heavy border. Every token below is redefined for dark, so
+     editing these changes light only. */
+  --page:#f4f4f0;
+  --surface:#ffffff;
+  --surface-2:#eeefe9;
+  --surface-3:#e8ecf1;
+  --line:#e3e1d9;
+  --line-strong:#c9c5b9;
+  --text:#0d1722;
+  --text-2:#3f4854;
+  --muted:#67707c;
+  --faint:#949aa3;
+  --accent:#0d3428;
+  --accent-soft:#e3ece6;
+  --on-dark:#ffffff;
+
+  /* The risk bands are an ordered severity scale, always shown with their name
+     beside them. Moderate and High used to sit too close to tell apart on the
+     donut (dE 8.9 to normal vision); these steps open that pair to 15.2 and keep
+     every band above 3:1 against the card. */
+  --low:#2f7d4f;   --low-bg:#e4efe8;
+  --mod:#b8860b;   --mod-bg:#fbf1dc;
+  --high:#c0441a;  --high-bg:#fceade;
+  --crit:#6f171c;  --crit-bg:#f8e8e8;
+
+  /* Two layers: a tight contact shadow to seat the card, and a wider soft one to
+     give it height. One flat 1px shadow is what made light look unfinished. */
+  --shadow:0 1px 1px rgba(13,23,34,.04), 0 2px 6px -1px rgba(13,23,34,.07);
+  --shadow-lg:0 16px 40px -8px rgba(13,23,34,.20), 0 2px 8px rgba(13,23,34,.06);
+  --radius:12px;
+}
+
+html[data-theme="dark"]{
+  --page:#0b1218;
+  --surface:#121c24;
+  --surface-2:#18242e;
+  --surface-3:#1d2a35;
+  --line:#243441;
+  --line-strong:#314554;
+  --text:#e9edf1;
+  --text-2:#b3bec8;
+  --muted:#8d9aa6;
+  --faint:#6f7d8a;
+  --accent:#7fc4a0;
+  --accent-soft:#162b23;
+  --on-dark:#e9edf1;
+
+  --low:#59b581;   --low-bg:#162b23;
+  --mod:#d6a63f;   --mod-bg:#2c2517;
+  --high:#e5824a;  --high-bg:#301f16;
+  --crit:#e0666c;  --crit-bg:#331a1d;
+
+  --shadow:0 1px 2px rgba(0,0,0,.4);
+  --shadow-lg:0 14px 36px rgba(0,0,0,.5);
+}
+
+*{box-sizing:border-box}
+html{color-scheme:light}
+html[data-theme="dark"]{color-scheme:dark}
+body{
+  margin:0;
+  font:15px/1.6 "Inter","Segoe UI",system-ui,-apple-system,sans-serif;
+  color:var(--text);
+  background:var(--page);
+  -webkit-font-smoothing:antialiased;
+}
+a{color:inherit}
+img{max-width:100%}
+h1,h2,h3,h4{margin:0;letter-spacing:-.3px;line-height:1.25}
+
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+.narrow{max-width:900px}
+
+/* ---------------------------------------------------------- gov strip */
+.gov{background:var(--brand-ink);color:rgba(255,255,255,.82);font-size:11.5px;padding:6px 0}
+html[data-theme="dark"] .gov{background:#060c11;border-bottom:1px solid var(--line)}
+.gov .wrap{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}
+.gov span{opacity:.5}
+
+/* ---------------------------------------------------------- buttons */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  border:1px solid transparent;border-radius:10px;padding:11px 20px;
+  font:inherit;font-weight:600;cursor:pointer;text-decoration:none;
+  transition:filter .15s,background .15s,border-color .15s;
+}
+.btn:hover{filter:brightness(1.08)}
+.btn:disabled{opacity:.5;cursor:default;filter:none}
+.btn-primary{background:var(--brand-ink);color:#fff}
+html[data-theme="dark"] .btn-primary{background:var(--accent);color:#08130d}
+.btn-accent{background:var(--brand-green);color:#fff}
+html[data-theme="dark"] .btn-accent{background:var(--accent);color:#08130d}
+.btn-danger{background:var(--crit);color:#fff}
+html[data-theme="dark"] .btn-danger{background:var(--crit);color:#1a0b0c}
+.btn-outline{background:transparent;color:var(--text);border-color:var(--line-strong)}
+.btn-outline:hover{background:var(--surface-2)}
+.btn-ghost{background:transparent;color:var(--muted);border-color:transparent}
+.btn-ghost:hover{background:var(--surface-2);color:var(--text)}
+.btn-sm{padding:7px 13px;font-size:13px;border-radius:8px}
+.btn-block{width:100%}
+.btn svg{width:17px;height:17px;flex:0 0 auto}
+
+/* ---------------------------------------------------------- cards */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+      padding:16px;box-shadow:var(--shadow)}
+.card-flush{padding:0;overflow:hidden}
+.ct{margin:0;font-size:15.5px;font-weight:650}
+.csub{margin:3px 0 0;color:var(--muted);font-size:12.5px}
+.empty{color:var(--faint);text-align:center;padding:30px 12px;font-size:14px}
+
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:1fr}
+.g3{grid-template-columns:1fr}
+.g4{grid-template-columns:repeat(2,1fr)}
+@media(min-width:860px){
+  .g2{grid-template-columns:1fr 1fr}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g4{grid-template-columns:repeat(4,1fr)}
+}
+
+/* ---------------------------------------------------------- pills */
+.pill{display:inline-block;border-radius:99px;padding:2px 11px;font-size:12px;font-weight:700;
+      white-space:nowrap}
+.tag{background:var(--surface-2);border:1px solid var(--line);border-radius:99px;
+     padding:2px 10px;font-size:12px;color:var(--text-2)}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+
+/* ---------------------------------------------------------- forms */
+label.fld{display:block;font-size:13px;font-weight:600;margin-top:14px}
+input,select,textarea{
+  width:100%;margin-top:6px;padding:11px 13px;border:1px solid var(--line-strong);
+  border-radius:10px;font:inherit;background:var(--surface);color:var(--text);
+}
+input[type=checkbox]{width:auto;margin:0}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.hint{margin:6px 0 0;font-size:11.5px;color:var(--muted)}
+.err{color:var(--crit);font-size:13px;margin:12px 0 0;min-height:1.2em;font-weight:500}
+.pw{position:relative}
+.pw input{padding-right:78px}
+.pw button{
+  position:absolute;right:6px;top:50%;transform:translateY(-3px);
+  border:0;background:none;color:var(--accent);font:inherit;font-size:12px;font-weight:700;
+  cursor:pointer;padding:6px 8px;border-radius:7px;
+}
+.pw button:hover{background:var(--surface-2)}
+
+/* ---------------------------------------------------------- tables */
+table{width:100%;border-collapse:collapse}
+th{background:var(--surface-2);color:var(--muted);font-weight:500;text-align:left;
+   padding:9px 15px;font-size:12.5px;white-space:nowrap}
+td{padding:10px 15px;border-top:1px solid var(--line);font-size:13.5px}
+tbody tr.clickable{cursor:pointer}
+tbody tr.clickable:hover{background:var(--surface-2)}
+tbody tr.sel{background:var(--accent-soft)}
+
+/* ---------------------------------------------------------- misc */
+.strip{margin-top:13px;background:var(--surface-2);border-radius:10px;padding:10px 12px;
+       display:flex;gap:10px;align-items:flex-start;font-size:12.5px;color:var(--text-2)}
+.strip b{color:var(--text)}
+.strip svg{width:16px;height:16px;flex:0 0 auto;margin-top:2px;color:var(--accent)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:24px;background:var(--brand-ink);
+       color:#fff;padding:11px 18px;border-radius:10px;font-size:13.5px;z-index:90;
+       box-shadow:var(--shadow-lg);max-width:88vw;text-align:center}
+html[data-theme="dark"] .toast{background:var(--surface-3);border:1px solid var(--line-strong)}
+
+.modal{position:fixed;inset:0;background:rgba(13,23,34,.55);display:grid;place-items:center;
+       padding:16px;z-index:80}
+.modal .sheet{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:24px;
+              width:100%;max-width:520px;max-height:92vh;overflow:auto;box-shadow:var(--shadow-lg)}
+.actions{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;flex-wrap:wrap}
+
+/* theme switch */
+.tswitch{display:inline-flex;border:1px solid var(--line-strong);border-radius:99px;padding:3px;
+         background:var(--surface)}
+.tswitch button{border:0;background:none;padding:5px 11px;border-radius:99px;font:inherit;
+                font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;
+                display:inline-flex;align-items:center;gap:5px}
+.tswitch button.on{background:var(--brand-ink);color:#fff}
+html[data-theme="dark"] .tswitch button.on{background:var(--accent);color:#08130d}
+.tswitch svg{width:14px;height:14px}
+
+/* footer, shared by every page */
+.site-foot{border-top:1px solid var(--line);background:var(--surface);margin-top:48px}
+.site-foot .cols{display:grid;gap:26px;padding:34px 0 26px;grid-template-columns:1fr}
+@media(min-width:760px){.site-foot .cols{grid-template-columns:1.6fr 1fr 1fr 1fr}}
+.site-foot h4{font-size:13px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);
+              font-weight:700;margin-bottom:10px}
+.site-foot ul{list-style:none;margin:0;padding:0}
+.site-foot li{padding:3px 0;font-size:13.5px;color:var(--text-2)}
+.site-foot a{color:var(--text-2);text-decoration:none}
+.site-foot a:hover{color:var(--accent);text-decoration:underline}
+.site-foot .brand{display:flex;gap:11px;align-items:flex-start}
+.site-foot .brand img{width:38px;height:38px;object-fit:contain}
+.site-foot .legal{border-top:1px solid var(--line);padding:14px 0 22px;font-size:12px;
+                  color:var(--faint);display:flex;flex-wrap:wrap;gap:6px 18px;justify-content:space-between}
+.helpline{display:inline-flex;align-items:center;gap:8px;background:var(--crit-bg);color:var(--crit);
+          border-radius:10px;padding:8px 13px;font-size:13px;font-weight:700;margin-top:12px}
+
+
+/* ------------------------------------------------------------------------- */
+/*  Light mode only.                                                          */
+/*  Dark defines its own depth through raised surfaces; light has to earn the  */
+/*  same separation from shadow and border weight. Everything here is scoped   */
+/*  so dark is not touched.                                                    */
+/* ------------------------------------------------------------------------- */
+html:not([data-theme="dark"]) .card{
+  border-color:#e7e5dd;
+  box-shadow:0 1px 1px rgba(13,23,34,.04), 0 2px 6px -1px rgba(13,23,34,.07);
+}
+html:not([data-theme="dark"]) .card:hover{
+  box-shadow:0 1px 1px rgba(13,23,34,.05), 0 4px 12px -2px rgba(13,23,34,.09);
+}
+/* the bars along the top sit above the page, so they cast rather than outline */
+html:not([data-theme="dark"]) .appbar,
+html:not([data-theme="dark"]) .topbar{
+  box-shadow:0 1px 3px rgba(13,23,34,.06);
+}
+/* a filled button should look pressable, not painted on */
+html:not([data-theme="dark"]) .btn-primary,
+html:not([data-theme="dark"]) .btn-accent,
+html:not([data-theme="dark"]) .btn-danger{
+  box-shadow:0 1px 2px rgba(13,23,34,.16);
+}
+html:not([data-theme="dark"]) .btn-primary:hover,
+html:not([data-theme="dark"]) .btn-accent:hover,
+html:not([data-theme="dark"]) .btn-danger:hover{
+  box-shadow:0 2px 6px rgba(13,23,34,.20);
+}
+html:not([data-theme="dark"]) .btn-outline{
+  background:var(--surface);
+  box-shadow:0 1px 1px rgba(13,23,34,.04);
+}
+html:not([data-theme="dark"]) .btn-outline:hover{background:var(--surface-2)}
+/* recessed panels: the gauge's axis chips, table heads, code and transcript */
+html:not([data-theme="dark"]) .axis,
+html:not([data-theme="dark"]) .strip,
+html:not([data-theme="dark"]) .transcript,
+html:not([data-theme="dark"]) .tscript,
+html:not([data-theme="dark"]) th{
+  box-shadow:inset 0 0 0 1px rgba(13,23,34,.035);
+}
+html:not([data-theme="dark"]) .drop{
+  box-shadow:inset 0 1px 3px rgba(13,23,34,.04);
+}
+/* form fields sit in the card, so they read as inset rather than floating */
+html:not([data-theme="dark"]) input,
+html:not([data-theme="dark"]) select,
+html:not([data-theme="dark"]) textarea{
+  box-shadow:inset 0 1px 2px rgba(13,23,34,.05);
+}
+html:not([data-theme="dark"]) .tag,
+html:not([data-theme="dark"]) .pill{
+  box-shadow:inset 0 0 0 1px rgba(13,23,34,.05);
+}
+html:not([data-theme="dark"]) .tswitch,
+html:not([data-theme="dark"]) .seg{
+  box-shadow:inset 0 1px 2px rgba(13,23,34,.05);
+}
+html:not([data-theme="dark"]) .tab.active,
+html:not([data-theme="dark"]) .tswitch button.on,
+html:not([data-theme="dark"]) .seg button.on{
+  box-shadow:0 1px 2px rgba(13,23,34,.22);
+}
+html:not([data-theme="dark"]) .modal .sheet{
+  box-shadow:0 24px 60px -12px rgba(13,23,34,.30), 0 4px 12px rgba(13,23,34,.08);
+}

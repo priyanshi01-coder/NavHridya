@@ -1,0 +1,6 @@
+# Pinned set for a hosted deploy (Render / Railway / Fly).
+starlette==0.37.2
+uvicorn[standard]==0.30.6
+python-multipart==0.0.9
+PyJWT==2.9.0
+fastapi==0.115.0
