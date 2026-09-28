@@ -87,6 +87,22 @@
   .seg button.on{background:var(--brand-ink);color:#fff}
   html[data-theme="dark"] .seg button.on{background:var(--accent);color:#08130d}
   form{margin-top:4px}
+  #err{min-height:0;margin:0}
+  #err.on{
+    display:flex;gap:9px;align-items:flex-start;
+    margin:16px 0 4px;padding:12px 14px;border-radius:11px;
+    background:var(--crit-bg);border:1px solid var(--crit);
+    color:var(--crit);font-size:14px;font-weight:600;line-height:1.5;
+  }
+  #err.on::before{content:"!";flex:0 0 20px;height:20px;border-radius:50%;
+    background:var(--crit);color:var(--surface);font-size:13px;font-weight:800;
+    display:grid;place-items:center;margin-top:1px}
+  #err.shake{animation:errShake .4s ease}
+  @keyframes errShake{
+    0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)}
+    40%{transform:translateX(5px)} 60%{transform:translateX(-3px)} 80%{transform:translateX(2px)}
+  }
+  @media(prefers-reduced-motion:reduce){#err.shake{animation:none}}
   .demo{margin-top:20px;background:var(--accent-soft);border-radius:11px;padding:12px 14px;
         font-size:12.5px;color:var(--text-2)}
   .demo b{color:var(--text)}
@@ -151,7 +167,7 @@
         </label>
         <p class="hint" id="pwHint" style="display:none">At least 8 characters.</p>
 
-        <p class="err" id="err"></p>
+        <p class="err" id="err" role="alert" aria-live="assertive"></p>
         <button class="btn btn-primary btn-block" id="go" type="submit">Sign in</button>
       </form>
 
@@ -201,11 +217,28 @@
       ? 'Already have an account? <button type="button" id="swapBtn">Sign in</button>'
       : 'No account yet? <button type="button" id="swapBtn">Create one</button>';
     $('swapBtn').onclick = () => { mode = up ? 'login' : 'signup'; sync(); };
-    $('err').textContent = '';
     history.replaceState(null, '', up ? '#signup' : '#');
     document.title = (up ? 'Create account' : 'Sign in') + ' - NAVHRIDYA';
   }
-  function sync() { paint(); $(mode === 'signup' ? 'fullName' : 'username').focus(); }
+  function sync() {
+    showError('');                       // a new form starts without the old complaint
+    paint();
+    $(mode === 'signup' ? 'fullName' : 'username').focus();
+  }
+
+  /** Put a failure in front of the person. The old version wrote the message
+   *  and then repainted over it, so a wrong password looked like a dead button. */
+  function showError(message) {
+    const box = $('err');
+    box.textContent = message || '';
+    box.classList.toggle('on', !!message);
+    if (message) {
+      box.classList.remove('shake');
+      void box.offsetWidth;              // restart the animation
+      box.classList.add('shake');
+      box.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
+  }
 
   $('tabIn').onclick = () => { mode = 'login'; sync(); };
   $('tabUp').onclick = () => { mode = 'signup'; sync(); };
@@ -220,14 +253,35 @@
     f.focus();
   };
 
+  /** The same rules the server enforces, checked here so the answer is instant. */
+  function validate(body) {
+    if (!body.username) return 'Enter your username.';
+    if (!body.password) return 'Enter your password.';
+    if (mode !== 'signup') return '';
+    if (body.username.length < 3) return 'Your username needs at least 3 characters.';
+    if (!/^[a-zA-Z0-9._]+$/.test(body.username)) {
+      return 'Usernames can use letters, numbers, dots and underscores - no spaces.';
+    }
+    if (body.password.length < 8) {
+      return `Your password needs at least 8 characters - that one has ${body.password.length}.`;
+    }
+    if (body.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(body.email)) {
+      return 'That email address does not look right. You can leave it blank.';
+    }
+    return '';
+  }
+
   $('form').onsubmit = async (e) => {
     e.preventDefault();
-    $('err').textContent = '';
+    showError('');
     const body = { username: $('username').value.trim(), password: $('password').value };
     if (mode === 'signup') {
       body.full_name = $('fullName').value.trim();
       body.email = $('email').value.trim();
     }
+    const complaint = validate(body);
+    if (complaint) { showError(complaint); return; }
+
     $('go').disabled = true;
     $('go').textContent = mode === 'signup' ? 'Creating account...' : 'Signing in...';
     try {
@@ -243,9 +297,9 @@
       if (data.user && data.user.theme) applyTheme(data.user.theme);
       location.href = '/app#/dashboard';
     } catch (ex) {
-      $('err').textContent = ex.message;
+      showError(ex.message);
       $('go').disabled = false;
-      paint();
+      $('go').textContent = mode === 'signup' ? 'Create account' : 'Sign in';
     }
   };
 

@@ -575,3 +575,39 @@ def test_a_case_reference_is_never_reused_after_a_deletion():
         ref = r.json()["case_id"]
         assert ref not in seen, f"case reference {ref} was handed out twice"
         seen.append(ref)
+
+
+def test_signing_in_works_whatever_case_the_name_was_typed_in():
+    """Registration lowercases the stored name. Sign-in used to match exactly,
+    so an account created as 'Priyanshi' could never be signed into again."""
+    c = TestClient(app)
+    made = c.post("/api/auth/register",
+                  json={"username": "Priyanshi", "password": "counsellor1"})
+    assert made.status_code == 201, made.text
+    assert made.json()["user"]["username"] == "priyanshi"
+    for typed in ("Priyanshi", "priyanshi", "PRIYANSHI", "  Priyanshi  "):
+        r = c.post("/api/auth/login", json={"username": typed, "password": "counsellor1"})
+        assert r.status_code == 200, f"could not sign in as {typed!r}: {r.text}"
+
+
+def test_every_rejected_sign_up_says_why():
+    """A refusal has to come back with a message the page can show. A silent
+    failure is indistinguishable from a dead button."""
+    c = TestClient(app)
+    c.post("/api/auth/register", json={"username": "taken01", "password": "counsellor1"})
+    attempts = [
+        ({"username": "ab", "password": "counsellor1"}, "3 characters"),
+        ({"username": "has space", "password": "counsellor1"}, "letters"),
+        ({"username": "shortpw01", "password": "abc"}, "8 characters"),
+        ({"username": "taken01", "password": "counsellor1"}, "taken"),
+        ({"username": "mailer01", "password": "counsellor1", "email": "nope"}, "email"),
+    ]
+    for body, expected in attempts:
+        r = c.post("/api/auth/register", json=body)
+        assert r.status_code >= 400, f"{body} should have been refused"
+        detail = r.json().get("detail", "")
+        assert detail, f"{body} was refused with no message at all"
+        assert expected in detail.lower(), f"{detail!r} does not mention {expected!r}"
+
+    bad = c.post("/api/auth/login", json={"username": "taken01", "password": "wrong"})
+    assert bad.status_code == 401 and bad.json()["detail"]

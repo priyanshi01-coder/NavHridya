@@ -11,8 +11,8 @@ import os
 import socket
 import sys
 
-VERSION = "5.0"          # bumped whenever this file changes - check it on startup
-BUILD = "2026-09-28"
+VERSION = "5.1"          # bumped whenever this file changes - check it on startup
+BUILD = "2026-09-28b"
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)

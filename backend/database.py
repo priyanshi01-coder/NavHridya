@@ -216,7 +216,20 @@ def delete_user(user_id: int) -> Dict[str, Any]:
 
 
 def get_user(username: str) -> Optional[sqlite3.Row]:
-    return conn().execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
+    """Find an account by name, ignoring case.
+
+    Registration lowercases the name it stores. Signing in used to match
+    exactly, so somebody who registered as "Priyanshi" could never sign in
+    again - the stored row said "priyanshi" and the lookup missed it.
+    """
+    name = (username or "").strip()
+    if not name:
+        return None
+    row = conn().execute("SELECT * FROM users WHERE username = ?", (name,)).fetchone()
+    if row:
+        return row
+    return conn().execute(
+        "SELECT * FROM users WHERE username = ? COLLATE NOCASE", (name,)).fetchone()
 
 
 def count_users() -> int:

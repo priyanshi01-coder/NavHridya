@@ -430,3 +430,25 @@ def test_both_headers_use_the_circular_logo():
         assert "border-radius:50%" in rule, f"{page} {selector} is not circular"
         size = int(rule.split("width:")[1].split("px")[0])
         assert size >= 40, f"{page} {selector} is only {size}px"
+
+
+def test_the_sign_in_page_cannot_erase_its_own_error():
+    """paint() used to clear #err on every repaint, and the submit handler
+    called it right after writing the message - so a wrong password showed
+    nothing at all and the button looked dead."""
+    import os
+    here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    with open(os.path.join(here, "frontend", "auth.html"), encoding="utf-8") as fh:
+        html = fh.read()
+
+    paint = html[html.index("function paint() {"):html.index("function sync()")]
+    assert "err" not in paint, "paint() must not touch the error message"
+
+    catch = html[html.index("} catch (ex) {"):]
+    catch = catch[:catch.index("};")]
+    assert "showError(ex.message)" in catch, "the failure must be shown"
+    assert "paint()" not in catch, "repainting there wipes the message"
+
+    # and it has to be announced, not whispered
+    assert 'role="alert"' in html
+    assert "#err.on{" in html

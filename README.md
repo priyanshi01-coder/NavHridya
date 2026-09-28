@@ -109,10 +109,10 @@ SVG, so it renders with the venue wifi unplugged.
 ### Verified, not just written
 
 ```bash
-pip install pytest && pytest          # 71 tests
+pip install pytest && pytest          # 74 tests
 ```
 
-- **30 core tests** — band boundaries, the 20-point bonus cap, the 100 ceiling,
+- **31 core tests** — band boundaries, the 20-point bonus cap, the 100 ceiling,
   the safety floor raising *and never lowering* a score, clamping of
   out-of-range model output, Hindi and romanised-Hindi rule matching, and
   rejection of invented recommendations.
@@ -120,7 +120,9 @@ pip install pytest && pytest          # 71 tests
   it cannot reach dark, the light risk bands stay far enough apart to tell apart,
   no engine or provider name is rendered anywhere in the interface, and Deepgram
   streaming is off.
-- **41 API tests** — that the link signs you in with no form, that the console
+- **43 API tests** — that a rejected sign-up always comes back with a message
+  the page can show, that a name typed in any case still signs in, that the link
+  signs you in with no form, that the console
   returns to zero once the queue is cleared while Reports keeps every case, that
   a case reference is never handed out twice after a deletion, that a live
   call's score moves while the call is running,
