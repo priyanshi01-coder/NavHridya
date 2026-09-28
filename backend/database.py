@@ -82,6 +82,15 @@ CREATE TABLE IF NOT EXISTS call_snapshots (
 
 CREATE INDEX IF NOT EXISTS idx_snapshots_case ON call_snapshots(case_id, at_seconds);
 
+-- One row per day, holding the last case number handed out. Kept separately
+-- from the cases themselves so deleting a case never frees its reference for
+-- reuse: a case number a counsellor has written down must not come back
+-- attached to a different call.
+CREATE TABLE IF NOT EXISTS case_counters (
+    day  TEXT PRIMARY KEY,
+    last INTEGER NOT NULL DEFAULT 0
+);
+
 CREATE INDEX IF NOT EXISTS idx_cases_created ON cases(id DESC);
 """
 
@@ -216,8 +225,25 @@ def count_users() -> int:
 
 # ------------------------------------------------------------------- cases
 def next_case_id() -> str:
-    n = int(conn().execute("SELECT COUNT(*) AS n FROM cases").fetchone()["n"])
-    return f"#C{datetime.now(timezone.utc).strftime('%Y%m%d')}-{n + 1:04d}"
+    """The next case reference for today, e.g. #C20260928-0004.
+
+    Handed out by a counter, not by counting rows. Counting rows reuses a
+    reference after a deletion - which both collides with the unique index and,
+    worse, could put an old reference on a new call.
+    """
+    day = datetime.now(timezone.utc).strftime("%Y%m%d")
+    with _lock:
+        c = conn()
+        c.execute("INSERT OR IGNORE INTO case_counters (day, last) VALUES (?, 0)", (day,))
+        # keep the counter ahead of anything a previous build already issued
+        row = c.execute("SELECT MAX(CAST(substr(case_id, -4) AS INTEGER)) AS m FROM cases "
+                        "WHERE case_id LIKE ?", (f"#C{day}-%",)).fetchone()
+        seen = int(row["m"] or 0)
+        c.execute("UPDATE case_counters SET last = MAX(last, ?) + 1 WHERE day = ?", (seen, day))
+        nxt = int(c.execute("SELECT last FROM case_counters WHERE day = ?", (day,))
+                  .fetchone()["last"])
+        c.commit()
+    return f"#C{day}-{nxt:04d}"
 
 
 def insert_case(row: Dict[str, Any]) -> Dict[str, Any]:
@@ -232,7 +258,16 @@ def insert_case(row: Dict[str, Any]) -> Dict[str, Any]:
     cols = ", ".join(payload)
     marks = ", ".join("?" for _ in payload)
     with _lock:
-        cur = conn().execute(f"INSERT INTO cases ({cols}) VALUES ({marks})", tuple(payload.values()))
+        for attempt in range(6):
+            try:
+                cur = conn().execute(
+                    f"INSERT INTO cases ({cols}) VALUES ({marks})", tuple(payload.values()))
+                break
+            except sqlite3.IntegrityError:
+                # another upload took this reference between our read and write
+                payload["case_id"] = next_case_id()
+                if attempt == 5:
+                    raise
         conn().commit()
         return get_case(int(cur.lastrowid))
 
@@ -354,34 +389,51 @@ def snapshots_for(case_pk: int) -> List[Dict[str, Any]]:
 
 
 def stats(user_id: Optional[int] = None) -> Dict[str, Any]:
+    """Headline numbers for the dashboard.
+
+    These count the *active* queue - everything not yet marked Resolved. A
+    counsellor who has worked through every case should see the console back at
+    zero, the way it looked before the first upload, rather than a tally of work
+    already finished. Nothing is hidden: Reports still lists every case ever
+    scored, and `archived_cases` says how many have been closed.
+    """
     c = conn()
-    where, params = ("", ())
-    if user_id is not None:
-        where, params = (" AND uploaded_by = ?", (user_id,))
     scope = " WHERE uploaded_by = ?" if user_id is not None else ""
-    total = int(c.execute(f"SELECT COUNT(*) AS n FROM cases{scope}", params).fetchone()["n"])
+    where = " AND uploaded_by = ?" if user_id is not None else ""
+    params: tuple = (user_id,) if user_id is not None else ()
+
+    active = " status <> 'Resolved'"
+    total = int(c.execute(
+        f"SELECT COUNT(*) AS n FROM cases WHERE{active}{where}", params).fetchone()["n"])
     high = int(c.execute(
-        "SELECT COUNT(*) AS n FROM cases WHERE svi_category IN ('High','Critical')" + where,
-        params).fetchone()["n"])
+        f"SELECT COUNT(*) AS n FROM cases WHERE{active} AND "
+        f"svi_category IN ('High','Critical'){where}", params).fetchone()["n"])
     under = int(c.execute(
-        "SELECT COUNT(*) AS n FROM cases WHERE status = 'In Progress'" + where,
+        f"SELECT COUNT(*) AS n FROM cases WHERE status = 'In Progress'{where}",
         params).fetchone()["n"])
+    archived = int(c.execute(
+        f"SELECT COUNT(*) AS n FROM cases WHERE status = 'Resolved'{where}",
+        params).fetchone()["n"])
+    every = int(c.execute(f"SELECT COUNT(*) AS n FROM cases{scope}", params).fetchone()["n"])
     avg = c.execute(
-        f"SELECT AVG(processing_seconds) AS a FROM cases{scope}", params).fetchone()["a"] or 0.0
+        f"SELECT AVG(processing_seconds) AS a FROM cases WHERE{active}{where}",
+        params).fetchone()["a"] or 0.0
     return {
         "total_cases": total,
         "high_risk": high,
         "under_support": under,
+        "archived_cases": archived,
+        "cases_ever": every,
         "avg_response_time_seconds": round(float(avg), 4),
     }
 
 
 def risk_distribution(user_id: Optional[int] = None) -> Dict[str, Any]:
     counts = {"Low": 0, "Moderate": 0, "High": 0, "Critical": 0}
-    sql = "SELECT svi_category, COUNT(*) AS n FROM cases"
+    sql = "SELECT svi_category, COUNT(*) AS n FROM cases WHERE status <> 'Resolved'"
     params: tuple = ()
     if user_id is not None:
-        sql += " WHERE uploaded_by = ?"
+        sql += " AND uploaded_by = ?"
         params = (user_id,)
     for r in conn().execute(sql + " GROUP BY svi_category", params):
         if r["svi_category"] in counts:

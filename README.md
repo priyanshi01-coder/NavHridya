@@ -10,25 +10,31 @@ every number** — and puts the case on an operator dashboard.
 Nothing in the app is hardcoded. Every figure is read back out of SQLite, which
 is also why a browser refresh loses nothing: the state lives on the server.
 
-**It starts empty, for everyone, every time.** A fresh deployment has no cases,
-and each visitor's console is scoped to their own session - so a first visit
-shows zero total cases, zero high risk, no SVI, and an empty Pending Review. The first
+**It starts empty, and it comes back to empty.** A fresh deployment has no
+cases. The dashboard then counts the *live queue*: once every case has been
+resolved or deleted, the console shows zero again - the same clean state a brand
+new deployment shows. Nothing is destroyed; Reports still lists every case ever
+scored, and the stat card says how many were closed. The first
 case appears when a call is uploaded or a sample transcript is scored - never
 before. To pre-fill it right before a demo, set `SEED_DEMO_CASES=true` in `.env`
 and the five bundled samples are scored on the next start through the real
 pipeline.
 
 **The deployed link opens the console.** Somebody following it lands on the
-dashboard, not a sign-in wall, and a private guest workspace is opened for them
-automatically. Every visitor gets their own: what one person uploads is never
-visible to the next, and every first visit starts at zero. Signing in with a real
-account works the same way and keeps the work under a name.
+dashboard, already signed in as the helpline's counsellor account - no form, no
+sign-in wall. The sign-in page is reachable only by pressing **Sign out**.
+
+This means the deployment is **open**: anyone with the URL is in that one shared
+workspace and can read, change and delete the cases in it. That is deliberate for
+a demo link, and it is the reason to change `SEED_ADMIN_PASSWORD` before sharing
+the URL widely. A counsellor who signs in under their own name gets their own
+case list, separate from the shared one.
 
 **Pages, all of them working:**
 
 | Page | What it is |
 |---|---|
-| `/` | The console - what the deployed link opens |
+| `/` | The console - what the deployed link opens, already signed in |
 | `/home` | Public site: hero, How it works, Key differentiators, SVI scoring, Safety by design, footer |
 | `/login` | Sign in **and** create account, with a show-password toggle |
 | `/app#/dashboard` | Stats, SVI gauge, risk donut, case details, recommendations, and why the case scored what it did |
@@ -103,10 +109,10 @@ SVG, so it renders with the venue wifi unplugged.
 ### Verified, not just written
 
 ```bash
-pip install pytest && pytest          # 65 tests
+pip install pytest && pytest          # 71 tests
 ```
 
-- **27 core tests** — band boundaries, the 20-point bonus cap, the 100 ceiling,
+- **30 core tests** — band boundaries, the 20-point bonus cap, the 100 ceiling,
   the safety floor raising *and never lowering* a score, clamping of
   out-of-range model output, Hindi and romanised-Hindi rule matching, and
   rejection of invented recommendations.
@@ -114,7 +120,10 @@ pip install pytest && pytest          # 65 tests
   it cannot reach dark, the light risk bands stay far enough apart to tell apart,
   no engine or provider name is rendered anywhere in the interface, and Deepgram
   streaming is off.
-- **38 API tests** — that a live call's score moves while the call is running,
+- **41 API tests** — that the link signs you in with no form, that the console
+  returns to zero once the queue is cleared while Reports keeps every case, that
+  a case reference is never handed out twice after a deletion, that a live
+  call's score moves while the call is running,
   that the safety floor fires mid-call with no model pass at all, that one
   visitor cannot touch another's live call, that ending a silent call saves
   nothing, that `/` serves the console, that each visitor gets a

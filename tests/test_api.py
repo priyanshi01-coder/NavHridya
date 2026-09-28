@@ -330,27 +330,30 @@ def test_the_root_url_serves_the_console_not_a_sign_in_wall():
     assert "answered first" in anon.get("/home").text
 
 
-def test_a_visitor_gets_a_private_empty_workspace():
+def test_the_link_signs_you_in_with_no_form_to_fill():
+    """Following the deployed link puts you in the counsellor account, so the
+    dashboard is simply there. There are no guest accounts any more."""
     visitor = TestClient(app)
-    r = visitor.post("/api/auth/guest")
+    assert visitor.post("/api/auth/guest").status_code == 404, "guest endpoint must be gone"
+
+    r = visitor.post("/api/auth/session")
     assert r.status_code == 201, r.text
     user = r.json()["user"]
-    assert user["is_guest"] is True and user["username"].startswith("guest_")
+    assert "is_guest" not in user
+    assert not user["username"].startswith("guest_")
+    assert user["username"] == "admin"
 
     head = {"Authorization": f"Bearer {r.json()['token']}"}
-    assert visitor.get("/api/cases", headers=head).json() == []
-    assert visitor.get("/api/cases/pending", headers=head).json() == []
-    stats = visitor.get("/api/dashboard/stats", headers=head).json()
-    assert stats["total_cases"] == 0 and stats["high_risk"] == 0
-    assert stats["under_support"] == 0
-    assert visitor.get("/api/dashboard/risk-distribution", headers=head).json()["total"] == 0
+    assert visitor.get("/api/auth/me", headers=head).status_code == 200
 
 
-def test_one_visitor_never_sees_another_visitors_cases():
-    """The whole point of a per-visitor session: a public demo link cannot leak
-    one person's uploaded call into the next person's console."""
+def test_two_named_accounts_still_cannot_see_each_others_cases():
+    """The shared link account is one workspace, but a counsellor who signs in
+    under their own name still only sees their own cases."""
     first = TestClient(app)
-    a = first.post("/api/auth/guest").json()
+    first.post("/api/auth/register", json={"username": "kavya", "password": "counsellor1"})
+    a = first.post("/api/auth/login",
+                   json={"username": "kavya", "password": "counsellor1"}).json()
     ahead = {"Authorization": f"Bearer {a['token']}"}
     made = first.post("/api/cases/upload", headers=ahead, data={"transcript_text": DANGEROUS})
     assert made.status_code == 201
@@ -358,9 +361,11 @@ def test_one_visitor_never_sees_another_visitors_cases():
     assert len(first.get("/api/cases", headers=ahead).json()) == 1
 
     second = TestClient(app)
-    b = second.post("/api/auth/guest").json()
+    second.post("/api/auth/register", json={"username": "deepa", "password": "counsellor1"})
+    b = second.post("/api/auth/login",
+                    json={"username": "deepa", "password": "counsellor1"}).json()
     bhead = {"Authorization": f"Bearer {b['token']}"}
-    assert b["user"]["username"] != a["user"]["username"], "each visitor needs their own session"
+    assert b["user"]["username"] != a["user"]["username"]
     assert second.get("/api/cases", headers=bhead).json() == [], "leaked into another session"
     assert second.get("/api/cases/pending", headers=bhead).json() == []
     assert second.get("/api/dashboard/stats", headers=bhead).json()["total_cases"] == 0
@@ -460,7 +465,7 @@ def test_the_deterministic_floor_does_not_wait_for_the_model():
 
 def test_a_live_call_belongs_to_the_session_that_started_it():
     first = TestClient(app)
-    a = first.post("/api/auth/guest").json()
+    a = first.post("/api/auth/session").json()
     ahead = {"Authorization": f"Bearer {a['token']}"}
     started = first.post("/api/live/start", headers=ahead, json={})
     if started.status_code == 400:
@@ -468,7 +473,10 @@ def test_a_live_call_belongs_to_the_session_that_started_it():
     sid = started.json()["session_id"]
 
     second = TestClient(app)
-    bhead = {"Authorization": f"Bearer {second.post('/api/auth/guest').json()['token']}"}
+    second.post("/api/auth/register", json={"username": "nitya", "password": "counsellor1"})
+    btok = second.post("/api/auth/login",
+                       json={"username": "nitya", "password": "counsellor1"}).json()["token"]
+    bhead = {"Authorization": f"Bearer {btok}"}
     assert second.get(f"/api/live/{sid}/state", headers=bhead).status_code == 404
     assert second.post(f"/api/live/{sid}/end", headers=bhead, json={}).status_code == 404
     assert first.get(f"/api/live/{sid}/state", headers=ahead).status_code == 200
@@ -476,7 +484,7 @@ def test_a_live_call_belongs_to_the_session_that_started_it():
 
 def test_ending_a_call_with_no_speech_saves_nothing():
     c2 = TestClient(app)
-    head = {"Authorization": f"Bearer {c2.post('/api/auth/guest').json()['token']}"}
+    head = {"Authorization": f"Bearer {c2.post('/api/auth/session').json()['token']}"}
     started = c2.post("/api/live/start", headers=head, json={})
     if started.status_code == 400:
         return
@@ -495,3 +503,75 @@ def test_the_streaming_module_is_inert_and_says_why():
     assert deepgram_stream.enabled() is False
     assert deepgram_stream.streaming_possible() is False
     assert deepgram_stream.why_not() == "Streaming is switched off in this build."
+
+
+# ------------------------------------------------- the console resets itself
+def test_the_console_returns_to_zero_once_every_case_is_resolved():
+    """A counsellor who has worked through the queue should see the console the
+    way it looked before the first upload. Nothing is destroyed - the cases stay
+    in Reports - but the dashboard counts the live queue, not finished work."""
+    c = TestClient(app)
+    c.post("/api/auth/register", json={"username": "meenal", "password": "counsellor1"})
+    head = {"Authorization": f"Bearer {c.post('/api/auth/login', json={'username': 'meenal', 'password': 'counsellor1'}).json()['token']}"}
+
+    assert c.get("/api/dashboard/stats", headers=head).json()["total_cases"] == 0
+
+    made = [c.post("/api/cases/upload", headers=head, data={"transcript_text": t}).json()
+            for t in (DANGEROUS, CALM)]
+    busy = c.get("/api/dashboard/stats", headers=head).json()
+    assert busy["total_cases"] == 2 and busy["high_risk"] >= 1
+    assert c.get("/api/dashboard/risk-distribution", headers=head).json()["total"] == 2
+
+    for case in made:
+        c.patch(f"/api/cases/{case['id']}/status", headers=head, json={"status": "Resolved"})
+
+    clear = c.get("/api/dashboard/stats", headers=head).json()
+    assert clear["total_cases"] == 0, "the queue is empty, so the console shows zero"
+    assert clear["high_risk"] == 0 and clear["under_support"] == 0
+    assert clear["archived_cases"] == 2, "and it still says how many were closed"
+    assert clear["cases_ever"] == 2
+    assert c.get("/api/dashboard/risk-distribution", headers=head).json()["total"] == 0
+
+    # nothing was deleted - every case is still on record
+    assert len(c.get("/api/cases", headers=head).json()) == 2
+    assert c.get("/api/cases/pending", headers=head).json() == []
+
+
+def test_deleting_every_case_also_empties_the_console():
+    c = TestClient(app)
+    c.post("/api/auth/register", json={"username": "sunita", "password": "counsellor1"})
+    head = {"Authorization": f"Bearer {c.post('/api/auth/login', json={'username': 'sunita', 'password': 'counsellor1'}).json()['token']}"}
+    case = c.post("/api/cases/upload", headers=head, data={"transcript_text": CALM}).json()
+    assert c.get("/api/dashboard/stats", headers=head).json()["cases_ever"] == 1
+    c.delete(f"/api/cases/{case['id']}", headers=head)
+    stats = c.get("/api/dashboard/stats", headers=head).json()
+    assert stats["total_cases"] == 0 and stats["cases_ever"] == 0
+    assert c.get("/api/cases", headers=head).json() == []
+
+
+def test_a_case_reference_is_never_reused_after_a_deletion():
+    """Deleting cases used to make the next upload fail outright: the reference
+    was derived from the row count, so it collided with one already issued. A
+    reference a counsellor has written down must also never reappear on a
+    different call."""
+    c = TestClient(app)
+    c.post("/api/auth/register", json={"username": "rekha", "password": "counsellor1"})
+    head = {"Authorization": f"Bearer {c.post('/api/auth/login', json={'username': 'rekha', 'password': 'counsellor1'}).json()['token']}"}
+
+    seen = []
+    made = []
+    for _ in range(3):
+        r = c.post("/api/cases/upload", headers=head, data={"transcript_text": CALM})
+        assert r.status_code == 201, r.text
+        made.append(r.json())
+        seen.append(r.json()["case_id"])
+
+    for case in made[:2]:
+        assert c.delete(f"/api/cases/{case['id']}", headers=head).status_code == 200
+
+    for _ in range(3):
+        r = c.post("/api/cases/upload", headers=head, data={"transcript_text": CALM})
+        assert r.status_code == 201, f"upload after a deletion failed: {r.text}"
+        ref = r.json()["case_id"]
+        assert ref not in seen, f"case reference {ref} was handed out twice"
+        seen.append(ref)

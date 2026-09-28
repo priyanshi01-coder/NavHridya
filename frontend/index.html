@@ -15,16 +15,26 @@
 <style>
   .topbar{position:sticky;top:0;z-index:30;background:var(--surface);
           border-bottom:1px solid var(--line)}
-  .topbar .wrap{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;
-                padding-top:10px;padding-bottom:10px;min-height:62px}
-  .logo{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:750;
-        font-size:17px;letter-spacing:-.3px}
-  .logo img{width:30px;height:30px;object-fit:contain}
-  .logo small{display:block;font-size:10.5px;font-weight:500;color:var(--muted);letter-spacing:.3px}
-  .navlinks{display:none;gap:4px;margin-left:12px}
-  @media(min-width:900px){.navlinks{display:flex}}
-  .navlinks a{padding:8px 12px;border-radius:8px;text-decoration:none;color:var(--muted);
-              font-size:14px;font-weight:550}
+  .topbar .wrap{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+                padding-top:10px;padding-bottom:10px;min-height:68px}
+  .logo{display:flex;align-items:center;gap:13px;text-decoration:none;font-weight:800;
+        font-size:22px;letter-spacing:-.5px;transition:opacity .18s ease}
+  .logo:hover{opacity:.85}
+  .logo img{width:52px;height:52px;object-fit:cover;border-radius:50%;
+            box-shadow:0 0 0 1px rgba(13,23,34,.10), 0 2px 6px rgba(13,23,34,.14);
+            transition:transform .25s cubic-bezier(.34,1.3,.64,1)}
+  .logo:hover img{transform:scale(1.06) rotate(-3deg)}
+  html[data-theme="dark"] .logo img{box-shadow:0 0 0 1px rgba(255,255,255,.14)}
+  /* the tagline sat too light to read against the header - it carries the
+     product's one-line description, so it earns real weight */
+  .logo small{display:block;font-size:12px;font-weight:650;color:var(--text-2);
+              letter-spacing:.1px;margin-top:1px}
+  .navlinks{display:none;gap:2px;margin-left:6px}
+  @media(min-width:980px){.navlinks{display:flex}}
+  /* 13px keeps the whole bar on one line next to the larger mark - measured,
+     not guessed: at 14px the right-hand controls drop to a second row. */
+  .navlinks a{padding:8px 8px;border-radius:8px;text-decoration:none;color:var(--muted);
+              font-size:13px;font-weight:600;white-space:nowrap}
   .navlinks a:hover{background:var(--surface-2);color:var(--text)}
   .topbar .right{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
                  justify-content:flex-end}
@@ -64,10 +74,6 @@
   html[data-theme="dark"] .flow .n{background:var(--accent);color:#08130d}
   .flow b{display:block;font-size:14px}
   .flow span{font-size:12.5px;color:var(--muted)}
-  .scorebox{margin-top:16px;border-top:1px dashed var(--line-strong);padding-top:14px;
-    display:flex;align-items:center;gap:14px}
-  .scorebox .big{font-size:34px;font-weight:750;line-height:1;color:var(--crit)}
-  .scorebox small{display:block;font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.4px}
 
   section.band{padding:56px 0}
   section.band.alt{background:var(--surface);border-top:1px solid var(--line);
@@ -129,6 +135,91 @@
   .finalcta p{color:var(--text-2);margin:12px auto 0;max-width:34em}
   .future{margin-top:30px;display:inline-flex;gap:9px;align-items:center;font-size:13px;
           color:var(--muted);background:var(--surface-2);border-radius:99px;padding:8px 16px}
+
+  /* ------------------------------------------------------------------ */
+  /*  Motion. Small, quick, and always reversible - nothing that delays   */
+  /*  a click or moves under the cursor. All of it is dropped for anyone  */
+  /*  who has asked their system for reduced motion.                      */
+  /* ------------------------------------------------------------------ */
+  .btn{transition:transform .2s cubic-bezier(.34,1.3,.64,1), box-shadow .2s ease,
+                  background .2s ease, border-color .2s ease, filter .15s ease}
+  .btn:hover{transform:translateY(-2px)}
+  .btn:active{transform:translateY(0)}
+  .btn svg{transition:transform .22s cubic-bezier(.34,1.3,.64,1)}
+  .btn:hover svg{transform:translateX(3px)}
+  .btn-outline:hover svg{transform:translateX(3px)}
+
+  .navlinks a{position:relative;transition:color .18s ease, background .18s ease}
+  .navlinks a::after{
+    content:"";position:absolute;left:12px;right:12px;bottom:3px;height:2px;
+    background:var(--accent);border-radius:2px;
+    transform:scaleX(0);transform-origin:left;transition:transform .24s cubic-bezier(.22,1,.36,1);
+  }
+  .navlinks a:hover::after{transform:scaleX(1)}
+
+  .eyebrow{transition:transform .22s ease, box-shadow .22s ease}
+  .eyebrow:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
+
+  .panel{transition:transform .3s cubic-bezier(.22,1,.36,1), box-shadow .3s ease}
+  .panel:hover{transform:translateY(-3px)}
+  .flow li{transition:transform .2s ease}
+  .flow li:hover{transform:translateX(4px)}
+  .flow .n{transition:transform .22s cubic-bezier(.34,1.3,.64,1)}
+  .flow li:hover .n{transform:scale(1.12)}
+
+  .step{transition:transform .26s cubic-bezier(.22,1,.36,1), box-shadow .26s ease,
+                   border-color .26s ease}
+  .step:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg);border-color:var(--line-strong)}
+  .step .ico{transition:transform .26s cubic-bezier(.34,1.3,.64,1), background .26s ease}
+  .step:hover .ico{transform:scale(1.08) rotate(-4deg)}
+  .step .num{transition:color .26s ease}
+  .step:hover .num{color:var(--accent)}
+
+  .diff{transition:transform .26s cubic-bezier(.22,1,.36,1), box-shadow .26s ease,
+                   border-left-width .2s ease}
+  .diff:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg);border-left-width:6px}
+  .diff h3 svg{transition:transform .26s cubic-bezier(.34,1.3,.64,1)}
+  .diff:hover h3 svg{transform:scale(1.15) rotate(-6deg)}
+
+  .bands li{transition:background .2s ease, padding-left .2s ease}
+  .bands li:hover{background:var(--surface-2);padding-left:6px;border-radius:6px}
+  .bands .sw{transition:transform .22s cubic-bezier(.34,1.3,.64,1)}
+  .bands li:hover .sw{transform:scale(1.4)}
+
+  .formula{transition:transform .3s cubic-bezier(.22,1,.36,1), box-shadow .3s ease}
+  .formula:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg)}
+
+  .callout{transition:transform .26s ease, box-shadow .26s ease}
+  .callout:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+
+  .future{transition:transform .22s ease, background .22s ease}
+  .future:hover{transform:translateY(-2px);background:var(--accent-soft)}
+
+  .site-foot a{transition:color .18s ease, padding-left .18s ease}
+  .site-foot a:hover{padding-left:3px}
+  .helpline{transition:transform .22s cubic-bezier(.34,1.3,.64,1)}
+  .helpline:hover{transform:scale(1.03)}
+
+  .tswitch button{transition:background .2s ease, color .2s ease}
+
+  /* Entrance is a plain CSS animation that always runs to completion, so no
+     element can be left invisible - an earlier scroll-triggered version could
+     strand anything the observer never reached. */
+  .hero .eyebrow{animation:riseIn .6s cubic-bezier(.22,1,.36,1) .05s both}
+  .hero h1{animation:riseIn .7s cubic-bezier(.22,1,.36,1) .12s both}
+  .hero .lede{animation:riseIn .7s cubic-bezier(.22,1,.36,1) .20s both}
+  .hero .cta{animation:riseIn .7s cubic-bezier(.22,1,.36,1) .28s both}
+  .hero .trust{animation:riseIn .7s cubic-bezier(.22,1,.36,1) .36s both}
+  .hero .panel{animation:riseIn .8s cubic-bezier(.22,1,.36,1) .24s both}
+  @keyframes riseIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+
+  @media(prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.001ms !important;
+      animation-iteration-count:1 !important;transition-duration:.001ms !important}
+    .btn:hover,.panel:hover,.step:hover,.diff:hover,.callout:hover,.future:hover,
+    .formula:hover,.helpline:hover{transform:none}
+    .hero .eyebrow,.hero h1,.hero .lede,.hero .cta,.hero .trust,.hero .panel{animation:none}
+  }
 </style>
 </head>
 <body>
@@ -194,13 +285,6 @@
       <li><span class="n">5</span><div><b>SVI and triage</b>
         <span>Plain arithmetic, a band, and up to four actions</span></div></li>
     </ul>
-    <div class="scorebox">
-      <div><div class="big">86</div><small>SVI / 100</small></div>
-      <div style="font-size:12.5px;color:var(--text-2)">
-        <b style="color:var(--crit)">Critical</b> - safety rule fired on an explicit threat to
-        life, so the score was raised to the floor of 80 regardless of the model's own output.
-      </div>
-    </div>
   </div>
 </div></div></section>
 
@@ -359,6 +443,7 @@ svi_score       = min(<span class="k">100</span>, base_score + indicator_bonus)
 <script src="/assets/common.js"></script>
 <script>
   mountThemeSwitch(document.getElementById('tsw'));
+
   mountFooter();
 </script>
 </body>

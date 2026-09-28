@@ -120,7 +120,6 @@ def _public_user(user) -> Dict[str, Any]:
         "id": user["id"],
         "username": user["username"],
         "role": user["role"],
-        "is_guest": bool(user["is_guest"]),
         "full_name": user["full_name"] or user["username"].title(),
         "email": user["email"] or "",
         "centre": user["centre"] or db.DEFAULT_CENTRE,
@@ -129,25 +128,23 @@ def _public_user(user) -> Dict[str, Any]:
     }
 
 
-def guest_session() -> Dict[str, Any]:
-    """Open a fresh, private workspace for somebody who just followed the link.
+def open_session() -> Dict[str, Any]:
+    """Sign the caller straight in as the helpline's counsellor account.
 
-    The deployed link goes straight to the console rather than a sign-in wall,
-    so a visitor can try the pipeline without making an account. Each visitor
-    gets their own guest account, which is the whole point: the console they
-    land on is empty, and nothing they upload is ever visible to the next
-    visitor. Signing in properly still works and behaves the same way.
+    The deployed link opens the console rather than a sign-in wall, so anybody
+    arriving without a session is put into the shared counsellor account. There
+    are no throwaway guest accounts any more: one workspace, one case list, the
+    same view for everyone who opens the link.
+
+    This means the deployment is open - anyone with the URL can read and change
+    the cases in it. That is a deliberate choice for a demo, and the reason the
+    seeded password should be changed before the link is shared widely.
     """
-    suffix = secrets.token_hex(3)
-    username = f"guest_{suffix}"
-    while db.get_user(username):
-        suffix = secrets.token_hex(3)
-        username = f"guest_{suffix}"
-    db.create_user(username, security.hash_password(secrets.token_urlsafe(24)),
-                   role="counsellor", full_name="Guest counsellor",
-                   is_guest=True)
-    user = db.get_user(username)
-    return {"token": security.create_token(username), "user": _public_user(user)}
+    ensure_seed_user()
+    user = db.get_user(SEED_USERNAME)
+    if not user:
+        raise ApiError("No counsellor account exists on this deployment.", 500)
+    return {"token": security.create_token(user["username"]), "user": _public_user(user)}
 
 
 def register(username: str, password: str, full_name: str = "",

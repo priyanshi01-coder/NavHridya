@@ -7,13 +7,13 @@
    on this page is hardcoded, which is also why a browser refresh loses nothing:
    the state lives on the server, not in the tab. */
 
-/* Somebody following the deployed link lands here, not on a sign-in wall.
-   With no token we open a private guest workspace for them - empty, and never
-   shared with the next visitor - rather than redirecting them away. */
+/* The deployed link opens the console, not a sign-in wall. With no token we
+   sign in as the helpline's counsellor account so the dashboard is simply
+   there. The only way to the sign-in page is pressing Sign out. */
 let TOKEN = localStorage.getItem('nav_token');
 
-async function openGuestSession() {
-  const res = await fetch('/api/auth/guest', { method: 'POST' });
+async function openSession() {
+  const res = await fetch('/api/auth/session', { method: 'POST' });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.detail || 'Could not start a session.');
   TOKEN = data.token;
@@ -80,7 +80,12 @@ async function api(path, opts = {}) {
     ...opts,
     headers: { Authorization: 'Bearer ' + TOKEN, ...(opts.headers || {}) },
   });
-  if (res.status === 401) { signOut(); throw new Error('Session expired'); }
+  if (res.status === 401) {
+    localStorage.removeItem('nav_token');
+    localStorage.removeItem('nav_user');
+    location.reload();                 // boot() opens a fresh session
+    throw new Error('Session expired');
+  }
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.detail || 'Request failed');
   return data;
@@ -95,7 +100,7 @@ function signOut() {
   /* clear the HttpOnly session cookie too, then leave for the public site */
   fetch('/api/auth/logout', { method: 'POST' })
     .catch(() => {})
-    .then(() => location.replace('/home'));
+    .then(() => location.replace('/login'));
 }
 
 /* ------------------------------------------------------------------- state */
@@ -153,13 +158,9 @@ function renderChrome() {
       key === 'pending' && pending ? `<span class="badge">${pending}</span>` : ''}</a>`).join('');
   const me = S.me || {};
   $('who').innerHTML = me.username
-    ? (me.is_guest
-      ? `<b>Guest session</b><small>not signed in</small>`
-      : `<b>${esc(me.full_name || me.username)}</b><small>${esc(label(me.role || 'counsellor'))}</small>`)
+    ? `<b>${esc(me.full_name || me.username)}</b><small>${esc(label(me.role || 'counsellor'))}</small>`
     : '';
-  $('signout').innerHTML = me.is_guest
-    ? icon('user', 15) + ' Sign in'
-    : icon('logout', 15) + ' Sign out';
+  $('signout').innerHTML = icon('logout', 15) + ' Sign out';
 }
 
 /* ------------------------------------------------------------- gauge/donut */
@@ -342,7 +343,13 @@ function firstRun(title, line) {
 /*  PAGE: Dashboard                                                      */
 /* ===================================================================== */
 function pageDashboard() {
-  if (!S.cases.length) {
+  /* The console shows the live queue. A case a counsellor has resolved is done
+     with - it stays in Reports, but it should not keep the dashboard looking
+     busy. Work through everything and the console returns to how it looked
+     before the first upload. */
+  const active = S.cases.filter((c) => c.status !== 'Resolved');
+
+  if (!active.length) {
     return `
     <div class="phead">
       <div><h1>Operator Dashboard</h1>
@@ -356,13 +363,14 @@ function pageDashboard() {
   }
 
   const st = S.stats || {};
-  const total = S.cases.length;
+  const total = active.length;
   const today = new Date().toDateString();
-  const todayN = S.cases.filter((c) => new Date(c.uploaded_at).toDateString() === today).length;
+  const todayN = active.filter((c) => new Date(c.uploaded_at).toDateString() === today).length;
   const pct = (n) => (total ? Math.round((n / total) * 100) : 0);
   const cards = [
-    ['files', '--surface-3', '--text', 'Total Cases', st.total_cases ?? 0,
-      `${todayN} added today`],
+    ['files', '--surface-3', '--text', 'Active Cases', st.total_cases ?? 0,
+      st.archived_cases ? `${todayN} added today \u00b7 ${st.archived_cases} resolved`
+                        : `${todayN} added today`],
     ['alert', '--crit-bg', '--crit', 'High Risk', st.high_risk ?? 0,
       `${pct(st.high_risk || 0)}% of all cases`],
     ['people', '--low-bg', '--low', 'Under Support', st.under_support ?? 0,
@@ -371,7 +379,7 @@ function pageDashboard() {
       fmtSecs(st.avg_response_time_seconds || 0), 'upload to scored case'],
   ];
 
-  const c = S.selected;
+  const c = active.find((x) => S.selected && x.id === S.selected.id) || active[0] || null;
   const d = S.dist || { counts: {}, total: 0 };
   const hc = d.total ? Math.round((((d.counts.High || 0) + (d.counts.Critical || 0)) / d.total) * 100) : 0;
 
@@ -497,12 +505,12 @@ function pageDashboard() {
   <div class="card card-flush" style="margin-top:14px">
     <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px">
       <p class="ct">Recent Cases</p>
-      <span style="color:var(--faint);font-size:12.5px">${S.cases.length} total</span>
+      <span style="color:var(--faint);font-size:12.5px">${active.length} open</span>
     </div>
     <div style="overflow-x:auto"><table>
       <thead><tr><th>Case ID</th><th>Channel</th><th>SVI</th><th>Risk</th>
         <th>Date</th><th>Time</th><th>Status</th></tr></thead>
-      <tbody id="rows">${S.cases.length ? S.cases.slice(0, 12).map((r) => `
+      <tbody id="rows">${active.length ? active.slice(0, 12).map((r) => `
         <tr class="clickable ${S.selected && S.selected.id === r.id ? 'sel' : ''}" data-id="${r.id}">
           <td><b>${esc(r.case_id)}</b></td>
           <td style="color:var(--text-2)">${esc(r.channel)}</td>
@@ -1633,7 +1641,7 @@ function pageSettings() {
         </div>
       </div>
 
-      <div class="card" style="margin-top:14px" ${me.is_guest ? 'hidden' : ''}>
+      <div class="card" style="margin-top:14px">
         <p class="ct">Password</p>
         <p class="csub">Change the password used to sign in to this console.</p>
         <label class="fld">New password
@@ -1651,13 +1659,13 @@ function pageSettings() {
       <div class="card" style="margin-top:14px">
         <p class="ct">Session</p>
         <div class="setrow">
-          <div class="t"><b>Sign out</b><span>Ends this session and returns to the NAVHRIDYA
-            homepage. Your cases stay on the server.</span></div>
+          <div class="t"><b>Sign out</b><span>Takes you to the sign-in page. Every case
+            stays on the server.</span></div>
           <button class="btn btn-outline" id="sOut">${icon('logout', 16)} Sign out</button>
         </div>
       </div>
 
-      <div class="card danger-zone" style="margin-top:14px" ${me.is_guest ? 'hidden' : ''}>
+      <div class="card danger-zone" style="margin-top:14px">
         <p class="ct" style="color:var(--crit)">Danger zone</p>
         <div class="setrow" style="border-bottom:0">
           <div class="t"><b>Delete this account</b>
@@ -1698,7 +1706,6 @@ function wireSettings() {
     onYes: async () => signOut(),
   });
 
-  if (!$('peek2')) return;      // a guest sees no password or delete section
 
   $('peek2').onclick = () => {
     const f = $('pw1');
@@ -1848,20 +1855,17 @@ window.addEventListener('hashchange', () => {
 (async function boot() {
   mountFooter();
   mountThemeSwitch($('tsw'), saveTheme);
-  $('signout').onclick = () => {
-    if (S.me && S.me.is_guest) { location.href = '/login'; return; }
-    confirmDialog({
-      title: 'Sign out of NAVHRIDYA?',
-      body: 'You will be returned to the homepage. Every case you uploaded stays on the server.',
-      confirm: 'Sign out',
-      onYes: async () => signOut(),
-    });
-  };
+  $('signout').onclick = () => confirmDialog({
+    title: 'Sign out of NAVHRIDYA?',
+    body: 'You will be taken to the sign-in page. Every case stays on the server.',
+    confirm: 'Sign out',
+    onYes: async () => signOut(),
+  });
 
   if (!location.hash) location.replace('#/dashboard');
 
   try {
-    if (!TOKEN) await openGuestSession();
+    if (!TOKEN) await openSession();
     await loadAll();
   } catch (ex) {
     $('view').innerHTML = `<div class="card" style="margin-top:24px">

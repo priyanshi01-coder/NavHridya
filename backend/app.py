@@ -106,9 +106,12 @@ async def api_register(request):
         return _err(exc)
 
 
-async def api_guest(request):
-    """Open a fresh private workspace, no account needed."""
-    return _with_session(sv.guest_session(), 201)
+async def api_session(request):
+    """Sign the caller in as the counsellor account, with no form to fill.
+
+    What makes the deployed link open straight onto the dashboard.
+    """
+    return _with_session(sv.open_session(), 201)
 
 
 async def api_logout(request):
@@ -416,7 +419,7 @@ routes = [
     Route("/signup", page_auth),
     Route("/api/auth/login", api_login, methods=["POST"]),
     Route("/api/auth/register", api_register, methods=["POST"]),
-    Route("/api/auth/guest", api_guest, methods=["POST"]),
+    Route("/api/auth/session", api_session, methods=["POST"]),
     Route("/api/auth/logout", api_logout, methods=["POST"]),
     Route("/api/auth/me", api_me, methods=["GET"]),
     Route("/api/auth/me", api_me_update, methods=["PATCH", "PUT"]),

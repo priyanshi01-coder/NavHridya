@@ -383,3 +383,50 @@ def test_deepgram_streaming_is_switched_off():
     with open(os.path.join(here, "frontend", "assets", "app.js"), encoding="utf-8") as fh:
         js = fh.read()
     assert "const STREAMING_ENABLED = false;" in js
+
+
+# ------------------------------------------------------- branding and motion
+def test_no_html_entity_is_passed_through_the_escaper():
+    """An entity inside esc() renders as literal text - `&middot;` showed up on
+    the dashboard that way once."""
+    import os
+    import re
+    here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    with open(os.path.join(here, "frontend", "assets", "app.js"), encoding="utf-8") as fh:
+        js = fh.read()
+    for m in re.finditer(r"esc\(([^()]*(?:\([^()]*\))?[^()]*)\)", js):
+        assert not re.search(r"&[a-zA-Z]+;", m.group(1)), \
+            f"HTML entity would render as text: {m.group(1).strip()[:60]}"
+
+
+def test_the_homepage_cannot_leave_content_invisible():
+    """An earlier scroll-triggered reveal stranded whole sections at opacity 0
+    when the observer never reached them. Entrance motion must be plain CSS
+    animation, which always runs to completion."""
+    import os
+    import re
+    here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    with open(os.path.join(here, "frontend", "index.html"), encoding="utf-8") as fh:
+        html = fh.read()
+    assert "IntersectionObserver" not in html
+    style = html[html.index("<style>"):html.index("</style>")]
+    # nothing may sit at opacity:0 unless an animation is bringing it back
+    for block in style.split("}"):
+        if "opacity:0" in block.replace(" ", "") and "keyframes" not in block \
+                and "@" not in block.split("{")[0]:
+            assert "animation" in block, f"rule can strand content hidden: {block.strip()[:80]}"
+    assert "prefers-reduced-motion" in style
+
+
+def test_both_headers_use_the_circular_logo():
+    import os
+    here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    for page, selector in (("index.html", ".logo img"), ("app.html", ".appbar .brand img"),
+                           ("auth.html", ".pitch a.logo img")):
+        with open(os.path.join(here, "frontend", page), encoding="utf-8") as fh:
+            css = fh.read()
+        rule = css[css.index(selector + "{"):]
+        rule = rule[:rule.index("}")]
+        assert "border-radius:50%" in rule, f"{page} {selector} is not circular"
+        size = int(rule.split("width:")[1].split("px")[0])
+        assert size >= 40, f"{page} {selector} is only {size}px"
